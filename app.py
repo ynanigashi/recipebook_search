@@ -40,7 +40,7 @@ app.config["SESSION_TYPE"] = "memcached"
 @login_required
 def index():
     user_id = session.get("user_id")
-    return f'loged in user_id is {user_id}'
+    return render_template('search.html', user_id=user_id)
 
 
 @app.route("/login", methods=["GET", "POST"])
