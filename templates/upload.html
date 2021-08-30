@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Search Recipe Book
+{% endblock %}
+
+{% block main %}
+<div>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <label for="formFileLg" class="form-label">ファイルを選択してください</label>
+        <input class="form-control form-control-lg" id="formFileLg" type="file" name="file">
+        <button class="w-100 btn btn-lg btn-primary" type="submit">送信</button>
+    </form>
+</div>
+{% endblock %}

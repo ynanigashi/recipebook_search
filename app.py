@@ -9,6 +9,7 @@ from flask import request
 from flask import session
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
+from werkzeug.utils import secure_filename
 
 from helpers import apology
 from helpers import login_required
@@ -53,11 +54,13 @@ def login():
 
         # Ensure username was submitted
         if not request.form.get("username"):
-            return apology("must provide username", 403)
+            flash('must provide username', 'danger')
+            return render_template('login.html')
 
         # Ensure password was submitted
         elif not request.form.get("password"):
-            return apology("must provide password", 403)
+            flash('must provide password', 'danger')
+            return render_template('login.html')
 
         with orm_session(engine) as ss:
             # Query database for username
@@ -65,18 +68,38 @@ def login():
             
             # Ensure username exists and password is correct
             if user == None or not check_password_hash(user.hash, request.form.get("password")):
-                return apology("invalid username and/or password", 403)
+                flash('invalid user name or password', 'danger')
+                return render_template('login.html')
 
             # Remember which user has logged in
             session["user_id"] = user.id
 
         # Redirect user to home page
+        flash('login success', 'success')
         return redirect("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
-        return render_template("login.html")
+        return render_template('login.html')
 
+@app.route("/upload", methods=["GET", "POST"])
+@login_required
+def upload():
+    user_id = session.get("user_id")
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            return apology('not file part')
+        print('get_file')
+        file = request.files['file']
+        if file.filename == '':
+            flash('file is required', "danger")
+            return render_template('upload.html')
+        
+        print(file.filename)
+        flash(file.filename, "success")
+        return render_template('upload.html')
+    else:
+        return render_template('upload.html')
 
 @app.route("/logout")
 def logout():
@@ -110,15 +133,19 @@ def changepw():
 
             # Ensure password is correct
             if not check_password_hash(hash, current_pw):
-                return apology("invalid password", 400)
+                flash('invalid password', 'danger')
+                return render_template('changepw.html')
 
             # check new passwords
             if not password:
-                return apology("new password is required.", 400)
+                flash('new password is required', 'danger')
+                return render_template('changepw.html')
             if not confirmation:
-                return apology("Confirmation password is required.", 400)
+                flash('nconfirm password is required', 'danger')
+                return render_template('changepw.html')
             elif password != confirmation:
-                return apology("Confirmation password do not match.", 400)
+                flash('confirm password is not match', 'danger')
+                return render_template('changepw.html')
 
             """Update password"""
             hash = generate_password_hash(password)
@@ -127,6 +154,7 @@ def changepw():
             ss.commit()
 
         # Redirect user to home page
+        flash('password has changed', 'success')
         return redirect("/")
     else:
         return render_template("changepw.html")
