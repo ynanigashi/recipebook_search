@@ -13,9 +13,11 @@ from werkzeug.utils import secure_filename
 
 from helpers import apology
 from helpers import login_required
+from helpers import extract_tables_from_xlsx
 from models import Users
 from db import engine
 from db import orm_session
+from db import  register_tables
 
 # Configure application
 app = Flask(__name__)
@@ -36,6 +38,12 @@ if not os.environ.get("SECRET_KEY"):
     raise RuntimeError("SECRET_KEY not set")
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config["SESSION_TYPE"] = "memcached"
+
+ALLOWED_EXTENSIONS = ('xls', 'xlsx')
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route("/")
 @login_required
@@ -75,7 +83,7 @@ def login():
             session["user_id"] = user.id
 
         # Redirect user to home page
-        flash('login success', 'success')
+        flash('login succeed', 'success')
         return redirect("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
@@ -89,14 +97,17 @@ def upload():
     if request.method == 'POST':
         if 'file' not in request.files:
             return apology('not file part')
-        print('get_file')
         file = request.files['file']
         if file.filename == '':
             flash('file is required', "danger")
             return render_template('upload.html')
         
-        print(file.filename)
-        flash(file.filename, "success")
+        if file and allowed_file(file.filename):
+            recipes = extract_tables_from_xlsx(file.stream.read())
+            register_tables(recipes)
+            flash(file.filename, "success")
+        else:
+            flash('file is invalid', "danger")
         return render_template('upload.html')
     else:
         return render_template('upload.html')

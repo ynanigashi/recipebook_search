@@ -1,5 +1,6 @@
 from flask import redirect, render_template, session
 from functools import wraps
+import pandas as pd
 
 
 def apology(message, code=400):
@@ -27,3 +28,40 @@ def login_required(f):
             return redirect("/login")
         return f(*args, **kwargs)
     return decorated_function
+
+
+label_table = {
+    "本のタイトル": 'book_title',
+    "料理名": 'recipe',
+    "作者": 'author',
+    "区分": 'category',
+    "カロリー": 'calorie',
+    "カロリー単位": 'calorie_unit',
+    "調理法・調理器具": 'tool',
+    "主材料": 'ingredients',
+    "検索": 'keywords',
+}
+
+def extract_tables_from_xlsx(excel):
+    recipes = []
+    df = pd.read_excel(excel, sheet_name='data', index_col=1)
+
+    df.rename(columns=label_table, inplace=True)
+    # for k, v in label_table.items():
+    #     df.rename(columns={k: v}, inplace=True)
+    
+    for name, row in df.iterrows():
+        recipe = {}
+        ingredients = []
+        for k, v in row.items():
+            if k == 'keywords': continue
+            if "主材料" in k:
+                if v in ['', '-', 'ー', '―', '‐']:
+                    continue
+                ingredients.append(v)
+            recipe[k] = v
+        recipe['name'] = name
+        recipe['ingredients'] = ingredients
+        recipes.append(recipe)
+
+    return recipes
