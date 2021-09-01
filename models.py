@@ -5,7 +5,14 @@ from sqlalchemy import String
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import declarative_base
 
-Base = declarative_base()
+class _base:
+    def to_dict(self):
+        d = dict(self.__dict__)
+        d.pop('_sa_instance_state', None)
+        return d
+
+
+Base = declarative_base(cls=_base)
 
 """
 Tables
@@ -13,11 +20,11 @@ Tables
 class Users(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    username = Column(String, unique=True, nullable=False)
+    name = Column(String, unique=True, nullable=False)
     hash = Column(String, nullable=False)
 
     def __repr__(self):
-        return f'id: {self.id}, user name: {self.username}, cash: {self.cash}'
+        return f'id: {self.id}, user name: {self.name}, cash: {self.hash}'
 
 class RelationRecipeIngredient(Base):
     __tablename__ = 'relation_recipe_ingredient'

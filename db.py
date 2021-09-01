@@ -19,6 +19,7 @@ from models import RelationRecipeIngredient
 # create engine
 DATABASE_URL = os.environ.get('DATABASE_URL') or 'sqlite+pysqlite:///recipe_search.db'
 DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://')
+
 engine = create_engine(DATABASE_URL, future=True, echo=True)
 
 # initialize data bases 
@@ -45,15 +46,26 @@ def register_user(username, password):
         # check username is already in used
         users = ss.query(Users)
         for user in users:
-            if user.username == username:
+            if user.name == username:
                 raise Exception("The user name is already in used.")
 
         user = Users();
-        user.username = username
+        user.name = username
         user.hash = generate_password_hash(password)
         ss.add(user)
         ss.commit()
         print(f'User registered id: {user.id}')
+
+def get_user_by_name(username):
+    stmt = select(Users).where(Users.name == username)
+    with orm_session(engine) as ss:
+        user = ss.execute(stmt).first()
+    # username is invalid then user is None
+    if not user: return user
+    
+    # username is valid then user is tapple
+    user, = user
+    return user.to_dict()
 
 def register_tables(data):
     recipe_dicts = data['recipes']

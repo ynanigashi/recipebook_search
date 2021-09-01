@@ -7,6 +7,7 @@ from flask import url_for
 from flask import flash
 from flask import request
 from flask import session
+from sqlalchemy.sql.expression import select
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.utils import secure_filename
@@ -17,7 +18,8 @@ from helpers import extract_tables_from_xlsx
 from models import Users
 from db import engine
 from db import orm_session
-from db import  register_tables
+from db import get_user_by_name
+from db import register_tables
 
 # Configure application
 app = Flask(__name__)
@@ -72,15 +74,15 @@ def login():
 
         with orm_session(engine) as ss:
             # Query database for username
-            user = ss.query(Users).filter(Users.username == request.form.get('username')).first()
-            
+            # user = ss.query(Users).filter(Users.username == request.form.get('username')).first()
+            user = get_user_by_name(request.form.get('username'))
             # Ensure username exists and password is correct
-            if user == None or not check_password_hash(user.hash, request.form.get("password")):
+            if not user or not check_password_hash(user['hash'], request.form.get("password")):
                 flash('invalid user name or password', 'danger')
                 return render_template('login.html')
 
             # Remember which user has logged in
-            session["user_id"] = user.id
+            session["user_id"] = user['id']
 
         # Redirect user to home page
         flash('login succeed', 'success')
