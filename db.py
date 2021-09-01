@@ -62,13 +62,12 @@ def get_user_by_name(username):
         user = ss.execute(stmt).first()
     # username is invalid then user is None
     if not user: return user
-    
+
     # username is valid then user is tapple
     user, = user
     return user.to_dict()
 
-def register_tables(data):
-    recipe_dicts = data['recipes']
+def register_tables(recipe_dicts):
     # create ingredients books authors category set
     ingredients, books, authors, categories = set(), set(), set(), set()
     for recipe_dict in recipe_dicts:
