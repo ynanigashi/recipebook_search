@@ -67,6 +67,32 @@ def get_user_by_name(username):
     user, = user
     return user.to_dict()
 
+def get_user_by_id(id):
+    stmt = select(Users).where(Users.id == id)
+    with orm_session(engine) as ss:
+        user = ss.execute(stmt).first()
+    # username is invalid then user is None
+    if not user: return user
+
+    # username is valid then user is tapple
+    user, = user
+    return user.to_dict()
+
+def update_password(user_id, password_hash):
+    stmt = select(Users).where(Users.id == user_id)
+    with orm_session(engine) as ss:
+        user = ss.execute(stmt).first()
+        
+        # username is invalid then user is None
+        if not user: return user
+
+        # username is valid then user is tapple
+        user, = user
+
+        user.hash = password_hash
+        ss.commit()
+
+
 def register_tables(recipe_dicts):
     # create ingredients books authors category set
     ingredients, books, authors, categories = set(), set(), set(), set()

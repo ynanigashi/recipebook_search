@@ -3,23 +3,20 @@ import os
 from flask import Flask
 from flask import render_template
 from flask import redirect
-from flask import url_for
 from flask import flash
 from flask import request
 from flask import session
-from sqlalchemy.sql.expression import select
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
-from werkzeug.utils import secure_filename
 
 from helpers import apology
 from helpers import login_required
+from helpers import allowed_file
 from helpers import extract_tables_from_xlsx
-from models import Users
-from db import engine
-from db import orm_session
 from db import get_user_by_name
 from db import register_tables
+from db import get_user_by_id
+from db import update_password
 
 # Configure application
 app = Flask(__name__)
@@ -40,12 +37,6 @@ if not os.environ.get("SECRET_KEY"):
     raise RuntimeError("SECRET_KEY not set")
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config["SESSION_TYPE"] = "memcached"
-
-ALLOWED_EXTENSIONS = ('xls', 'xlsx')
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route("/")
 @login_required
@@ -72,17 +63,15 @@ def login():
             flash('must provide password', 'danger')
             return render_template('login.html')
 
-        with orm_session(engine) as ss:
-            # Query database for username
-            # user = ss.query(Users).filter(Users.username == request.form.get('username')).first()
-            user = get_user_by_name(request.form.get('username'))
-            # Ensure username exists and password is correct
-            if not user or not check_password_hash(user['hash'], request.form.get("password")):
-                flash('invalid user name or password', 'danger')
-                return render_template('login.html')
+        # Query database for username
+        user = get_user_by_name(request.form.get('username'))
+        # Ensure username exists and password is correct
+        if not user or not check_password_hash(user['hash'], request.form.get("password")):
+            flash('invalid user name or password', 'danger')
+            return render_template('login.html')
 
-            # Remember which user has logged in
-            session["user_id"] = user['id']
+        # Remember which user has logged in
+        session["user_id"] = user['id']
 
         # Redirect user to home page
         flash('login succeed', 'success')
@@ -95,7 +84,6 @@ def login():
 @app.route("/upload", methods=["GET", "POST"])
 @login_required
 def upload():
-    user_id = session.get("user_id")
     if request.method == 'POST':
         if 'file' not in request.files:
             return apology('not file part')
@@ -140,31 +128,30 @@ def changepw():
         if not current_pw:
             return apology("must provide password", 400)
 
-        with orm_session(engine) as ss:
-            # get current pw hash
-            hash = ss.query(Users).filter(Users.id==user_id).first().hash
+        # get current pw hash
+        user = get_user_by_id(user_id)
+        if not user:
+            flash('invalid user', 'danger')
+            return render_template('changepw.html') 
 
-            # Ensure password is correct
-            if not check_password_hash(hash, current_pw):
-                flash('invalid password', 'danger')
-                return render_template('changepw.html')
+        # Ensure password is correct
+        if not check_password_hash(user['hash'], current_pw):
+            flash('invalid password', 'danger')
+            return render_template('changepw.html')
 
-            # check new passwords
-            if not password:
-                flash('new password is required', 'danger')
-                return render_template('changepw.html')
-            if not confirmation:
-                flash('nconfirm password is required', 'danger')
-                return render_template('changepw.html')
-            elif password != confirmation:
-                flash('confirm password is not match', 'danger')
-                return render_template('changepw.html')
+        # check new passwords
+        if not password:
+            flash('new password is required', 'danger')
+            return render_template('changepw.html')
+        if not confirmation:
+            flash('nconfirm password is required', 'danger')
+            return render_template('changepw.html')
+        elif password != confirmation:
+            flash('confirm password is not match', 'danger')
+            return render_template('changepw.html')
 
-            """Update password"""
-            hash = generate_password_hash(password)
-            user = ss.query(Users).filter(Users.id==user_id).first()
-            user.hash = hash
-            ss.commit()
+        """Update password"""
+        update_password(user['id'], generate_password_hash(password))
 
         # Redirect user to home page
         flash('password has changed', 'success')

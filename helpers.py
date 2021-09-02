@@ -30,6 +30,12 @@ def login_required(f):
     return decorated_function
 
 
+ALLOWED_EXTENSIONS = ('xls', 'xlsx')
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 label_table = {
     "本のタイトル": 'book_title',
     "料理名": 'recipe',
