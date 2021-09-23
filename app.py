@@ -17,6 +17,7 @@ from db import get_user_by_name
 from db import register_tables
 from db import get_user_by_id
 from db import update_password
+from db import get_recipe_by_keyword
 
 # Configure application
 app = Flask(__name__)
@@ -41,8 +42,13 @@ app.config["SESSION_TYPE"] = "memcached"
 @app.route("/")
 @login_required
 def index():
-    user_id = session.get("user_id")
-    return render_template('search.html', user_id=user_id)
+    req = request.args
+    query_word = req.get('q')
+    if query_word != '':
+        rows = get_recipe_by_keyword(query_word)
+    else:
+        rows = []
+    return render_template('search.html', query_word=query_word, rows=rows)
 
 
 @app.route("/login", methods=["GET", "POST"])

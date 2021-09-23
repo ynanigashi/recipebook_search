@@ -5,5 +5,45 @@
 {% endblock %}
 
 {% block main %}
-    <h1>Login User_id is {{user_id}}</h1>
+<form action="/" method="get">
+    <div class="row">
+        <div class="col-md-10">
+            <input class="form-control form-control-lg" type="text" name='q' placeholder="input" aria-label=".form-control-lg">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn-lg btn-primary mb-3">Search</button>
+        </div>
+      </div>
+</form>
+{% if query_word %}
+    <h1>{{query_word}}の検索結果</h1>
+    {% if rows %}
+        <table class="table table-borderless table-striped table-hover">
+        <thead>
+            <tr>
+                <th>name</th>
+                <th>category_id</th>
+                <th>author</th>
+                <th>book</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+            <tr>
+                <td>{{row.name}}</td>
+                <td>{{row.category}}</td>
+                <td>{{row.author}}</td>
+                <td>{{row.book}}</td>
+            </tr>
+            </tr>
+            </tr>
+        {% endfor %}
+        </tbody>
+    {% else %}
+    <h2>検索結果は存在しません、文言を変えるなどして再検索ください。</h2>
+    {% endif %}
+    </table>
+
+{% endif %}
+
 {% endblock %}

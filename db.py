@@ -174,3 +174,19 @@ def register_tables(recipe_dicts):
             ss.add(recipe)
 
         ss.commit()
+
+def get_recipe_by_keyword(keyword):
+    stmt = select(Recipe, Category.name, Book.name, Author.name).where(Recipe.name.like(f'%{keyword}%'))\
+            .join(Category, Recipe.category_id == Category.id)\
+            .join(Book, Recipe.book_id == Book.id)\
+            .join(Author, Recipe.author_id == Author.id)
+    recipes = []
+    with orm_session(engine) as ss:
+        rows = ss.execute(stmt).all()
+        for recipe, category_name, book_name, author_name in rows:
+            recipe = recipe.to_dict()
+            recipe['category'] = category_name
+            recipe['book'] = book_name
+            recipe['author'] = author_name
+            recipes.append(recipe)
+    return recipes
