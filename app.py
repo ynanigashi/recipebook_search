@@ -17,7 +17,13 @@ from db import get_user_by_name
 from db import register_tables
 from db import get_user_by_id
 from db import update_password
-from db import get_recipe_by_keyword
+from db import get_recipes_by_ing_ids
+from db import get_recipes_by_keyword
+from db import get_recipes_by_author_id
+from db import get_recipes_by_book_id
+from db import get_categories
+from db import get_ingredients
+from db import get_recipe_by_id
 
 # Configure application
 app = Flask(__name__)
@@ -42,13 +48,39 @@ app.config["SESSION_TYPE"] = "memcached"
 @app.route("/")
 @login_required
 def index():
+    categories = get_categories()
+    ingredients = get_ingredients()
+    print(categories)
+    recipes = []
+    recipe = {}
     req = request.args
     query_word = req.get('q')
-    if query_word != '':
-        rows = get_recipe_by_keyword(query_word)
-    else:
-        rows = []
-    return render_template('search.html', query_word=query_word, rows=rows)
+    query_type = req.get('t')
+    query_id = req.get('id')
+    # change str to int
+    ings = [int(i) for i in req.getlist('ings')]
+
+    if query_type == 'ingredients':
+        recipes = get_recipes_by_ing_ids(ings)
+        ing_name_list = [ing['name'] for ing in ingredients if ing['id'] in ings]
+        query_word = "、".join(ing_name_list)
+    elif query_type == 'recipe_name':
+        recipes = get_recipes_by_keyword(query_word)
+    elif query_type == 'author_id':
+        recipes = get_recipes_by_author_id(query_id)
+    elif query_type == 'book_id':
+        recipes = get_recipes_by_book_id(query_id)
+    elif query_type == 'recipe_id':
+        recipe = get_recipe_by_id(query_id)
+
+    return render_template('search.html',
+                            ings=ingredients,
+                            selected_ings=ings,
+                            cats=categories,
+                            query_word=query_word,
+                            recipes=recipes,
+                            recipe=recipe 
+                            )
 
 
 @app.route("/login", methods=["GET", "POST"])

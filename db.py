@@ -4,6 +4,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy.sql.expression import select
 from sqlalchemy import create_engine
 from sqlalchemy import delete
+from sqlalchemy import func
 from sqlalchemy.orm import Session as orm_session
 
 from models import Base
@@ -175,11 +176,8 @@ def register_tables(recipe_dicts):
 
         ss.commit()
 
-def get_recipe_by_keyword(keyword):
-    stmt = select(Recipe, Category.name, Book.name, Author.name).where(Recipe.name.like(f'%{keyword}%'))\
-            .join(Category, Recipe.category_id == Category.id)\
-            .join(Book, Recipe.book_id == Book.id)\
-            .join(Author, Recipe.author_id == Author.id)
+
+def get_recipes(stmt):
     recipes = []
     with orm_session(engine) as ss:
         rows = ss.execute(stmt).all()
@@ -190,3 +188,81 @@ def get_recipe_by_keyword(keyword):
             recipe['author'] = author_name
             recipes.append(recipe)
     return recipes
+
+
+def get_recipes_by_ing_ids(ings):
+    recipe_ids = []
+    stmt = select(RelationRecipeIngredient.recipe_id)\
+            .where(RelationRecipeIngredient.ingredient_id.in_(ings))\
+            .group_by(RelationRecipeIngredient.recipe_id)\
+            .having(func.count(RelationRecipeIngredient.recipe_id) == len(ings))
+    with orm_session(engine) as ss:
+        rows = ss.execute(stmt).all()
+        recipe_ids = [id for id, in rows]
+        print(recipe_ids)
+        
+    stmt = select(Recipe, Category.name, Book.name, Author.name).where(Recipe.id.in_(recipe_ids))\
+        .join(Category, Recipe.category_id == Category.id)\
+        .join(Book, Recipe.book_id == Book.id)\
+        .join(Author, Recipe.author_id == Author.id)
+    return get_recipes(stmt)
+
+
+def get_recipes_by_keyword(keyword):
+    stmt = select(Recipe, Category.name, Book.name, Author.name).where(Recipe.name.like(f'%{keyword}%'))\
+            .join(Category, Recipe.category_id == Category.id)\
+            .join(Book, Recipe.book_id == Book.id)\
+            .join(Author, Recipe.author_id == Author.id)
+    return get_recipes(stmt)
+
+
+def get_recipes_by_author_id(id):
+    stmt = select(Recipe, Category.name, Book.name, Author.name).where(Recipe.author_id == id)\
+            .join(Category, Recipe.category_id == Category.id)\
+            .join(Book, Recipe.book_id == Book.id)\
+            .join(Author, Recipe.author_id == Author.id)
+    return get_recipes(stmt)
+
+
+def get_recipes_by_book_id(id):
+    stmt = select(Recipe, Category.name, Book.name, Author.name).where(Recipe.book_id == id)\
+            .join(Category, Recipe.category_id == Category.id)\
+            .join(Book, Recipe.book_id == Book.id)\
+            .join(Author, Recipe.author_id == Author.id)
+    return get_recipes(stmt)
+
+
+def get_recipe_by_id(id):
+    stmt = select(Recipe, Category.name, Book.name, Author.name).where(Recipe.id == id)\
+            .join(Category, Recipe.category_id == Category.id)\
+            .join(Book, Recipe.book_id == Book.id)\
+            .join(Author, Recipe.author_id == Author.id)
+
+    with orm_session(engine) as ss:
+        for reci, cat_name, book_name, author_name in ss.execute(stmt):
+            recipe = reci.to_dict()
+            recipe['category'] = cat_name
+            recipe['book'] = book_name
+            recipe['author'] = author_name
+            ingredients = []
+            for ing in reci.ingredients:
+                ingredients.append(ing.to_dict())
+            recipe['ingredients'] = ingredients
+    return recipe
+
+
+def get_all_items(model):
+    stmt = select(model)
+    items = []
+    with orm_session(engine) as ss:
+        rows = ss.execute(stmt).all()
+        for row, in rows:
+            items.append(row.to_dict())
+    return items
+
+
+def get_categories():
+    return get_all_items(Category)
+
+def get_ingredients():
+    return get_all_items(Ingredient)

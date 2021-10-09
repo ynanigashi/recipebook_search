@@ -6,39 +6,115 @@
 
 {% block main %}
 <form action="/" method="get">
-    <div class="row">
+    <div class="row" id="ing-select">
+        <div class="col-md-10">
+            <select class="form-select form-select-lg mb-3 select" name="ings" multiple="multiple" aria-label=".form-select-lg">
+                {% if ings %}
+                    {% for ing in ings %}
+                        {% if ing.id in selected_ings %}
+                            <option value="{{ing.id}}" selected>{{ing.name}}</option>
+                        {% else %}
+                            <option value="{{ing.id}}">{{ing.name}}</option>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <option value="none">no data</option>
+                {% endif %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn-lg btn-primary mb-3">Search</button>
+        </div>
+    </div>
+    <div class="row" id="search-input" style="display: none">
         <div class="col-md-10">
             <input class="form-control form-control-lg" type="text" name='q' placeholder="input" aria-label=".form-control-lg">
         </div>
         <div class="col-md-2">
             <button type="submit" class="btn-lg btn-primary mb-3">Search</button>
         </div>
-      </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2 form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="t" id="inlineRadio1" value="ingredients" checked>
+            <label class="form-check-label" for="inlineRadio1">Ingredients</label>
+        </div>
+        <div class="col-md-2 form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="t" id="inlineRadio2" value="recipe_name">
+            <label class="form-check-label" for="inlineRadio2">recipe name</label>
+        </div>
+        <div class="col-md-2 form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="t" id="inlineRadio3" value="book">
+            <label class="form-check-label" for="inlineRadio3">book title</label>
+        </div>
+        <div class="col-md-2 form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="t" id="inlineRadio4" value="author">
+            <label class="form-check-label" for="inlineRadio4">author name</label>
+        </div>
+    </div>
+
+        {% if cats %}
+            <div class="row">
+                <h3>filter by categories</h3>
+            </div>
+            <div class="row">
+                {% for category in cats %}
+                <div class="col-md-2 form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="inlineCheckbox{{category.id}}" value="category{{category.id}}">
+                    <label class="form-check-label" for="inlineCheckbox{{category.id}}">{{category.name}}</label>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
 </form>
 {% if query_word %}
+    <hr>
     <h1>{{query_word}}の検索結果</h1>
-    {% if rows %}
+    {% if recipes %}
         <table class="table table-borderless table-striped table-hover">
         <thead>
             <tr>
                 <th>name</th>
-                <th>category_id</th>
+                <th>category</th>
                 <th>author</th>
-                <th>book</th>
+                <th>book title</th>
             </tr>
         </thead>
         <tbody>
-        {% for row in rows %}
+        {% for recipe in recipes %}
             <tr>
-                <td>{{row.name}}</td>
-                <td>{{row.category}}</td>
-                <td>{{row.author}}</td>
-                <td>{{row.book}}</td>
+                <td><a href='/?t=recipe_id&id={{recipe.id}}&q={{recipe.name}}'>{{recipe.name}}</a></td>
+                <td>{{recipe.category}}</td>
+                <td><a href="/?t=author_id&id={{recipe.author_id}}&q={{recipe.author}}">{{recipe.author}}</a></td>
+                <td><a href="/?t=book_id&id={{recipe.book_id}}&q={{recipe.book}}">{{recipe.book}}</a></td>
             </tr>
             </tr>
             </tr>
         {% endfor %}
         </tbody>
+    {% elif recipe %}
+        <table class="table table-striped">
+            <tbody>
+            <tr>
+                <th scope="row">Category</th>
+                <td>{{recipe.category}}</td>
+            </tr>
+            <tr>
+                <th scope="row">Author</th>
+                <td><a href="/?t=author_id&id={{recipe.author_id}}&q={{recipe.author}}">{{recipe.author}}</a></td>
+            </tr>
+            <tr>
+                <th scope="row">Book title</th>
+                <td><a href="/?t=book_id&id={{recipe.book_id}}&q={{recipe.book}}">{{recipe.book}}</td>
+            </tr>
+            {% for i in range(recipe.ingredients | length) %}
+                <tr>
+                    <th scope="row">Ingredients {{i + 1}}</th>
+                    <td><a href="/?ings={{ recipe.ingredients[i].id }}&t=ingredients">{{ recipe.ingredients[i].name }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
     {% else %}
     <h2>検索結果は存在しません、文言を変えるなどして再検索ください。</h2>
     {% endif %}
