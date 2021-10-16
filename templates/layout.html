@@ -76,7 +76,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
-              <dev class="flash alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              <dev class="flash alert alert-{{ category }}" role="alert">
                 <span>{{ message }}</span>
                   </dev>
             {% endfor %}

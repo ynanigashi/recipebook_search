@@ -7,9 +7,15 @@
 {% block main %}
 <div>
     <form action="/upload" method="post" enctype="multipart/form-data">
-        <label for="formFileLg" class="form-label">ファイルを選択してください</label>
-        <input class="form-control form-control-lg" id="formFileLg" type="file" name="file">
-        <button class="w-100 btn btn-lg btn-primary" type="submit">送信</button>
+        <div class="row">
+            <label for="formFileLg" class="form-label">ファイルを選択してください</label>
+            <div class="col-md-10">
+                <input class="form-control form-control-lg" id="formFileLg" type="file" name="file">
+            </div>
+            <div class="col-md-2">
+               <button class="btn btn-lg btn-primary" type="submit">送信</button>                
+            </div>
+        </div>
     </form>
 </div>
 {% endblock %}
