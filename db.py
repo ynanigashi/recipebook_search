@@ -1,4 +1,5 @@
 import os
+from re import S
 
 from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy.sql.expression import select
@@ -190,31 +191,69 @@ def get_recipes(stmt):
     return recipes
 
 
-def get_recipes_by_ing_ids(ings):
+def get_recipes_by_ing_ids(ings, cats):
     recipe_ids = []
     stmt = select(RelationRecipeIngredient.recipe_id)\
             .where(RelationRecipeIngredient.ingredient_id.in_(ings))\
             .group_by(RelationRecipeIngredient.recipe_id)\
             .having(func.count(RelationRecipeIngredient.recipe_id) == len(ings))
+
     with orm_session(engine) as ss:
         rows = ss.execute(stmt).all()
         recipe_ids = [id for id, in rows]
         print(recipe_ids)
         
-    stmt = select(Recipe, Category.name, Book.name, Author.name).where(Recipe.id.in_(recipe_ids))\
+    stmt = select(Recipe, Category.name, Book.name, Author.name)\
         .join(Category, Recipe.category_id == Category.id)\
         .join(Book, Recipe.book_id == Book.id)\
-        .join(Author, Recipe.author_id == Author.id)
+        .join(Author, Recipe.author_id == Author.id)\
+        .where(Recipe.id.in_(recipe_ids))
+    
+    if len(cats) > 0:
+        stmt = stmt.where(Recipe.category_id.in_(cats))
+
     return get_recipes(stmt)
 
+def get_recipes_by_book_title(keyword):
+    book_ids = []
+    stmt = select(Book.id)\
+            .where(Book.name.like(f'%{keyword}%'))
+    
+    with orm_session(engine) as ss:
+        rows = ss.execute(stmt).all()
+        book_ids = [id for id, in rows]
+
+    stmt = select(Recipe, Category.name, Book.name, Author.name)\
+        .join(Category, Recipe.category_id == Category.id)\
+        .join(Book, Recipe.book_id == Book.id)\
+        .join(Author, Recipe.author_id == Author.id)\
+        .where(Recipe.book_id.in_(book_ids))
+    
+    return get_recipes(stmt)
 
 def get_recipes_by_keyword(keyword):
     stmt = select(Recipe, Category.name, Book.name, Author.name).where(Recipe.name.like(f'%{keyword}%'))\
             .join(Category, Recipe.category_id == Category.id)\
             .join(Book, Recipe.book_id == Book.id)\
             .join(Author, Recipe.author_id == Author.id)
+
     return get_recipes(stmt)
 
+def get_recipes_by_author_name(keyword):
+    author_ids = []
+    stmt = select(Author.id).where(Author.name.like(f'%{keyword}%'))
+
+    with orm_session(engine) as ss:
+        rows = ss.execute(stmt).all()
+        author_ids = [id for id, in rows]
+
+    stmt = select(Recipe, Category.name, Book.name, Author.name)\
+        .join(Category, Recipe.category_id == Category.id)\
+        .join(Book, Recipe.book_id == Book.id)\
+        .join(Author, Recipe.author_id == Author.id)\
+        .where(Recipe.author_id.in_(author_ids))
+
+    return get_recipes(stmt)   
 
 def get_recipes_by_author_id(id):
     stmt = select(Recipe, Category.name, Book.name, Author.name).where(Recipe.author_id == id)\

@@ -5,71 +5,98 @@
 {% endblock %}
 
 {% block main %}
-<form action="/" method="get">
-    <div class="row" id="ing-select">
-        <div class="col-md-10">
-            <select class="form-select form-select-lg mb-3 select" name="ings" multiple="multiple" aria-label=".form-select-lg">
-                {% if ings %}
-                    {% for ing in ings %}
-                        {% if ing.id in selected_ings %}
-                            <option value="{{ing.id}}" selected>{{ing.name}}</option>
+<nav>
+    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+      <a class="nav-link active" id="nav-ings-tab" data-bs-toggle="tab" href="#nav-ings" role="tab" aria-controls="nav-ings" aria-selected="true">by Ingredients</a>
+      <a class="nav-link" id="nav-word-tab" data-bs-toggle="tab" href="#nav-word" role="tab" aria-controls="nav-word" aria-selected="false">by keyword</a>
+    </div>
+</nav>
+<div class="tab-content" id="nav-tabContent">
+    <div class="tab-pane fade show active" id="nav-ings" role="tabpanel" aria-labelledby="nav-ings-tab">
+        <form action="/" method="get" id='form-ings'>
+            <div class="row mt-5">
+                <div class="col-md-12">
+                    <select class="form-select form-select-lg mb-3 select" name="ings" multiple="multiple" aria-label=".form-select-lg" id='select-ings'>
+                        {% if ings %}
+                            {% for ing in ings %}
+                                {% if ing.id in selected_ings %}
+                                    <option value="{{ing.id}}" selected>{{ing.name}}</option>
+                                {% else %}
+                                    <option value="{{ing.id}}">{{ing.name}}</option>
+                                {% endif %}
+                            {% endfor %}
                         {% else %}
-                            <option value="{{ing.id}}">{{ing.name}}</option>
+                            <option value="none">no data</option>
                         {% endif %}
-                    {% endfor %}
-                {% else %}
-                    <option value="none">no data</option>
-                {% endif %}
-            </select>
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn-lg btn-primary mb-3">Search</button>
-        </div>
-    </div>
-    <div class="row" id="search-input" style="display: none">
-        <div class="col-md-10">
-            <input class="form-control form-control-lg" type="text" name='q' placeholder="input" aria-label=".form-control-lg">
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn-lg btn-primary mb-3">Search</button>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-2 form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="t" id="inlineRadio1" value="ingredients" checked>
-            <label class="form-check-label" for="inlineRadio1">Ingredients</label>
-        </div>
-        <div class="col-md-2 form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="t" id="inlineRadio2" value="recipe_name">
-            <label class="form-check-label" for="inlineRadio2">recipe name</label>
-        </div>
-        <div class="col-md-2 form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="t" id="inlineRadio3" value="book">
-            <label class="form-check-label" for="inlineRadio3">book title</label>
-        </div>
-        <div class="col-md-2 form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="t" id="inlineRadio4" value="author">
-            <label class="form-check-label" for="inlineRadio4">author name</label>
-        </div>
-    </div>
-
-        {% if cats %}
-            <div class="row">
-                <h3>filter by categories</h3>
-            </div>
-            <div class="row">
-                {% for category in cats %}
-                <div class="col-md-2 form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="inlineCheckbox{{category.id}}" value="category{{category.id}}">
-                    <label class="form-check-label" for="inlineCheckbox{{category.id}}">{{category.name}}</label>
+                    </select>
                 </div>
-                {% endfor %}
+                <!-- <div class="col-md-2">
+                    <button type="submit" class="btn-lg btn-primary mb-3">Search</button>
+                </div> -->
             </div>
-        {% endif %}
-</form>
+            <input name="t" value="ingredients" hidden>
+                {% if cats %}
+                    <div class="row my-2">
+                        <h3>filter by categories</h3>
+                    </div>
+                    <div class="row px-4" id='catCheckBoxs'>
+                        {% for category in cats %}
+                        <div class="col-md-2 form-check form-check-inline">
+                            {% if category.id in selected_cats %}
+                                <input class="form-check-input" type="checkbox" id="inlineCheckbox{{category.id}}" name="cats" value="{{category.id}}" checked>
+                            {% else %}
+                                <input class="form-check-input" type="checkbox" id="inlineCheckbox{{category.id}}" name="cats" value="{{category.id}}">
+                            {% endif %}
+                            <label class="form-check-label" for="inlineCheckbox{{category.id}}">{{category.name}}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+        </form>
+    </div>
+    <div class="tab-pane fade" id="nav-word" role="tabpanel" aria-labelledby="nav-word-tab">
+        <form action="/" method="get">
+            <div class="row mt-5" id="search-input">
+                <div class="col-md-10">
+                    {% if not query_type == 'ingredients' and query_word == "" %}
+                        <input class="form-control form-control-lg" type="text" name='q' placeholder="input keyword" aria-label=".form-control-lg" value='{{query_word}}'>
+                    {% else %}
+                        <input class="form-control form-control-lg" type="text" name='q' placeholder="input keyword" aria-label=".form-control-lg">
+                    {% endif %}
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn-lg btn-primary mb-3">Search</button>
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-md-2 form-check form-check-inline">
+                    <!-- default value!! -->
+                    <input class="form-check-input" type="radio" name="t" id="inlineRadio1" value="recipe_name" checked>
+                    <label class="form-check-label" for="inlineRadio1">recipe name</label>
+                </div>
+                <div class="col-md-2 form-check form-check-inline">
+                    {% if query_type in ['book_title', 'book_id'] %}
+                        <input class="form-check-input" type="radio" name="t" id="inlineRadio2" value="book_title" checked>
+                    {% else %}
+                        <input class="form-check-input" type="radio" name="t" id="inlineRadio2" value="book_title">
+                    {% endif %}
+                    <label class="form-check-label" for="inlineRadio2">book title</label>
+                </div>
+                <div class="col-md-2 form-check form-check-inline">
+                    {% if query_type in ['author_name', 'author_id'] %}
+                        <input class="form-check-input" type="radio" name="t" id="inlineRadio3" value="author_name" checked>
+                    {% else %}
+                        <input class="form-check-input" type="radio" name="t" id="inlineRadio3" value="author_name">
+                    {% endif %}
+                    <label class="form-check-label" for="inlineRadio3">author name</label>
+                </div>
+            </div>
+       </form>
+    </div>
+</div>
+
 {% if query_word %}
     <hr>
-    <h1>{{query_word}}の検索結果</h1>
     {% if recipes %}
         <table class="table table-borderless table-striped table-hover">
         <thead>
@@ -92,7 +119,9 @@
             </tr>
         {% endfor %}
         </tbody>
+        </table>
     {% elif recipe %}
+        <h2> {{recipe.name}}の詳細</h2>
         <table class="table table-striped">
             <tbody>
             <tr>
@@ -118,8 +147,14 @@
     {% else %}
     <h2>検索結果は存在しません、文言を変えるなどして再検索ください。</h2>
     {% endif %}
-    </table>
+
+
 
 {% endif %}
 
+{% if query_type in ['recipe_name', 'recipe_id', 'book_title', 'book_id', 'author_name', 'author_id']  %}
+    <script type="text/javascript">
+        select_keyword_tab()
+    </script>
+{% endif%}
 {% endblock %}

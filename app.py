@@ -19,8 +19,10 @@ from db import get_user_by_id
 from db import update_password
 from db import get_recipes_by_ing_ids
 from db import get_recipes_by_keyword
-from db import get_recipes_by_author_id
+from db import get_recipes_by_book_title
 from db import get_recipes_by_book_id
+from db import get_recipes_by_author_name
+from db import get_recipes_by_author_id
 from db import get_categories
 from db import get_ingredients
 from db import get_recipe_by_id
@@ -59,24 +61,33 @@ def index():
     query_id = req.get('id')
     # change str to int
     ings = [int(i) for i in req.getlist('ings')]
+    cats = [int(i) for i in req.getlist('cats')]
+    print(f"categories:{cats}")
 
     if query_type == 'ingredients':
-        recipes = get_recipes_by_ing_ids(ings)
+        recipes = get_recipes_by_ing_ids(ings, cats)
         ing_name_list = [ing['name'] for ing in ingredients if ing['id'] in ings]
         query_word = "、".join(ing_name_list)
     elif query_type == 'recipe_name':
         recipes = get_recipes_by_keyword(query_word)
-    elif query_type == 'author_id':
-        recipes = get_recipes_by_author_id(query_id)
-    elif query_type == 'book_id':
-        recipes = get_recipes_by_book_id(query_id)
     elif query_type == 'recipe_id':
         recipe = get_recipe_by_id(query_id)
+    elif query_type == 'book_title':
+        recipes = get_recipes_by_book_title(query_word)
+    elif query_type == 'book_id':
+        recipes = get_recipes_by_book_id(query_id)
+    elif query_type == 'author_name':
+        recipes = get_recipes_by_author_name(query_word)
+    elif query_type == 'author_id':
+        recipes = get_recipes_by_author_id(query_id)
+
 
     return render_template('search.html',
+                            query_type=query_type,
                             ings=ingredients,
                             selected_ings=ings,
                             cats=categories,
+                            selected_cats=cats,
                             query_word=query_word,
                             recipes=recipes,
                             recipe=recipe 

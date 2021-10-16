@@ -12,7 +12,7 @@ body {
 } */
 
 main > .container {
-  padding-top: 100px;
+  padding-top: 120px;
 }
 .selector-for-some-widget {
     box-sizing: content-box;
@@ -20,8 +20,4 @@ main > .container {
 
 .alert {
   display: block;
-}
-
-.select2-container--default {
-  font-size: 1.25rem;
 }
