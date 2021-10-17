@@ -6,16 +6,16 @@
 
 {% block main %}
     <form action="/changepw" method="post" class="form-signin container-sm">
-        <h1 class="h3 mb-3 fw-normal">パスワードを変更する</h1>
-        <div class="form-group">
+        <h1 class="h3 mb-3 fw-normal">Cange password</h1>
+        <div class="form-group my-2">
             <input autocomplete="off" autofocus class="form-control form-control-lg" name="current_pw" placeholder="current password" type="password">
         </div>
-        <div class="form-group">
+        <div class="form-group my-2">
             <input class="form-control form-control-lg" name="password" placeholder="new Password" type="password">
         </div>
-        <div class="form-group">
+        <div class="form-group my-2">
             <input class="form-control form-control-lg" name="confirmation" placeholder="new Password (confirmation)" type="password">
         </div>
-        <button class="w-100 btn btn-lg btn-primary" type="submit">Register</button>
+        <button class="w-100 btn btn-lg btn-primary my-2" type="submit">Register</button>
     </form>
 {% endblock %}

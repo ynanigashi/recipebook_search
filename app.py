@@ -200,7 +200,8 @@ def changepw():
 
         # Ensure password was submitted
         if not current_pw:
-            return apology("must provide password", 400)
+            flash('current password is required', 'danger')
+            return render_template('changepw.html')
 
         # get current pw hash
         user = get_user_by_id(user_id)
