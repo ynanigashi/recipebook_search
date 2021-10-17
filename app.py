@@ -47,27 +47,42 @@ if not os.environ.get("SECRET_KEY"):
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config["SESSION_TYPE"] = "memcached"
 
+
 @app.route("/")
 @login_required
 def index():
+    # get db data
     categories = get_categories()
     ingredients = get_ingredients()
-    print(categories)
+    
+    # get query parameter
     recipes = []
     recipe = {}
     req = request.args
     query_word = req.get('q')
     query_type = req.get('t')
     query_id = req.get('id')
-    # change str to int
-    ings = [int(i) for i in req.getlist('ings')]
-    cats = [int(i) for i in req.getlist('cats')]
-    print(f"categories:{cats}")
 
+    # change str to int
+    try:
+        ings = [int(i) for i in req.getlist('ings')]
+    except ValueError as e:
+        # alart invalid value
+        flash('ingredients are invalid', 'danger')
+        print(f'error:{e}')
+        ings = []
+
+    try:
+        cats = [int(i) for i in req.getlist('cats')]
+    except ValueError as e:
+        # alart invalid value
+        flash('category value is invalid', 'danger')
+        print(f'error:{e}')
+        cats = []
+
+    # get recipes data
     if query_type == 'ingredients':
         recipes = get_recipes_by_ing_ids(ings, cats)
-        ing_name_list = [ing['name'] for ing in ingredients if ing['id'] in ings]
-        query_word = "、".join(ing_name_list)
     elif query_type == 'recipe_name':
         recipes = get_recipes_by_keyword(query_word)
     elif query_type == 'recipe_id':
@@ -80,7 +95,6 @@ def index():
         recipes = get_recipes_by_author_name(query_word)
     elif query_type == 'author_id':
         recipes = get_recipes_by_author_id(query_id)
-
 
     return render_template('search.html',
                             query_type=query_type,
@@ -112,7 +126,7 @@ def login():
             flash('must provide password', 'danger')
             return render_template('login.html')
 
-        # Query database for username
+        # Query database by username
         user = get_user_by_name(request.form.get('username'))
         # Ensure username exists and password is correct
         if not user or not check_password_hash(user['hash'], request.form.get("password")):
@@ -130,26 +144,37 @@ def login():
     else:
         return render_template('login.html')
 
+
 @app.route("/upload", methods=["GET", "POST"])
 @login_required
 def upload():
     if request.method == 'POST':
+        # check request
         if 'file' not in request.files:
             return apology('not file part')
         file = request.files['file']
+        
+        # check file is posted
         if file.filename == '':
             flash('file is required', "danger")
             return render_template('upload.html')
         
+        # register file data
         if file and allowed_file(file.filename):
             recipes = extract_tables_from_xlsx(file.stream.read())
-            register_tables(recipes)
-            flash(file.filename, "success")
+            try:
+                register_tables(recipes)
+            except Exception as e:
+                flash('file is invalid', 'danger')
+                print(e)
+            else:
+                flash(f'{file.filename} is registerd', "success")
         else:
             flash('file is invalid', "danger")
         return render_template('upload.html')
     else:
         return render_template('upload.html')
+
 
 @app.route("/logout")
 def logout():
@@ -199,7 +224,7 @@ def changepw():
             flash('confirm password is not match', 'danger')
             return render_template('changepw.html')
 
-        """Update password"""
+        # update password
         update_password(user['id'], generate_password_hash(password))
 
         # Redirect user to home page
@@ -208,15 +233,18 @@ def changepw():
     else:
         return render_template("changepw.html")
 
+
 def errorhandler(e):
     """Handle error"""
     if not isinstance(e, HTTPException):
         e = InternalServerError()
     return apology(e.name, e.code)
 
+
 # Listen for errors
 for code in default_exceptions:
     app.errorhandler(code)(errorhandler)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -30,8 +30,8 @@ def login_required(f):
     return decorated_function
 
 
+# check file extension is valid
 ALLOWED_EXTENSIONS = ('xls', 'xlsx')
-
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

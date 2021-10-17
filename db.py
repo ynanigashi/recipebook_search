@@ -1,7 +1,6 @@
 import os
-from re import S
 
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import generate_password_hash
 from sqlalchemy.sql.expression import select
 from sqlalchemy import create_engine
 from sqlalchemy import delete
@@ -24,6 +23,7 @@ DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://')
 
 engine = create_engine(DATABASE_URL, future=True, echo=True)
 
+
 # initialize data bases 
 def init_db():
     try:
@@ -33,6 +33,7 @@ def init_db():
 
     Base.metadata.create_all(engine)
     print('create_all is done')
+
 
 # register user
 def register_user(username, password):
@@ -168,8 +169,8 @@ def register_tables(recipe_dicts):
             category_name = recipe_dict['category']
 
             for ingredient_name in recipe_dict['ingredients']:
-                # print(ingredient_name)
                 recipe.ingredients.append(ingredient_dict[ingredient_name])
+            
             recipe.book_id = book_dict[book_name].id
             recipe.author_id = author_dict[author_name].id
             recipe.category_id = category_dict[category_name].id
