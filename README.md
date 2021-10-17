@@ -8,20 +8,19 @@ Frontend: Bootstrap, HTML, jQuery
 Backend: flask  
 ORM: SQLArchemy  
 DB: SQLite3  
-infra: heroku | aws  
+infrastructure: aws (maybe)  
 
-開発環境起動方法(Windows)
+How to start the development environment(Windows powershell)
 ```
-$env:SECRET_KEY = "hogehogehogehoge"
+Add-type -AssemblyName System.Web
+$env:SECRET_KEY = [System.Web.Security.Membership]::GeneratePassword(16, 3)
 python app.py
 ````
-DB初期化、検証ユーザ―作成
+
+db initiarize and register user
 ```
 >>> from db import init_db
 >>> init_db()
 >>> from db import register_user
 >>> register_user('<username>', '<password>')
 ```
-
-memo
-DB系の処理はdb.pyにまとめてapp.pyからは見えないようにする
